@@ -1,0 +1,72 @@
+name: rentnear
+description: "RentNear — Hyperlocal P2P Rental Platform"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # Supabase
+  supabase_flutter: ^2.8.4
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Navigation
+  go_router: ^14.8.1
+
+  # Local Storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  sqflite: ^2.4.2
+  flutter_secure_storage: ^9.2.4
+  shared_preferences: ^2.3.4
+
+  # Firebase
+  firebase_core: ^3.12.1
+  firebase_analytics: ^11.4.4
+  firebase_crashlytics: ^4.3.4
+  firebase_messaging: ^15.2.4
+
+  # Location
+  geolocator: ^13.0.2
+  geocoding: ^3.0.0
+
+  # Media
+  image_picker: ^1.1.2
+  cached_network_image: ^3.4.1
+
+  # Utilities
+  intl: ^0.20.2
+  connectivity_plus: ^6.1.3
+  uuid: ^4.5.1
+  flutter_svg: ^2.0.17
+  shimmer: ^3.0.0
+  timeago: ^3.7.0
+  google_sign_in: ^7.2.0
+  flutter_dotenv: ^5.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.15
+  riverpod_generator: ^2.6.4
+  mockito: ^5.4.6
+  build_verify: ^3.1.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - .env
+    - assets/images/
+    - assets/icons/

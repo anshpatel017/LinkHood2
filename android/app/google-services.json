@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "427714865187",
+    "project_id": "linkhood-7e5dd",
+    "storage_bucket": "linkhood-7e5dd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:427714865187:android:2bc740b7daebedb58ca996",
+        "android_client_info": {
+          "package_name": "com.example.rentnear"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "427714865187-gjb09ca6eg58ljufqert9djqrmls6kpn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGU-Bs34bkFf_AmXUKDn6UJ8FUO3IeOQQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "427714865187-gjb09ca6eg58ljufqert9djqrmls6kpn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
