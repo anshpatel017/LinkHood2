@@ -17,9 +17,7 @@ class MyListingsPage extends ConsumerWidget {
     final listingsAsync = ref.watch(myListingsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Listings'),
-      ),
+      appBar: AppBar(title: const Text('My Listings')),
       body: listingsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => EmptyStateWidget(
@@ -70,7 +68,9 @@ class MyListingsPage extends ConsumerWidget {
                       children: [
                         // Small Image on the left
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
                           child: item.hasImages
                               ? Image.network(
                                   item.firstImageUrl,
@@ -82,18 +82,21 @@ class MyListingsPage extends ConsumerWidget {
                                   width: 60,
                                   height: 60,
                                   color: AppColors.surfaceVariant,
-                                  child: const Icon(Icons.image_not_supported,
-                                      color: AppColors.textSecondary, size: 20),
+                                  child: const Icon(
+                                    Icons.image_not_supported,
+                                    color: AppColors.textSecondary,
+                                    size: 20,
+                                  ),
                                 ),
                         ),
                         const SizedBox(width: AppSpacing.md),
-                        
+
                         // Content on the right, matching My Requests style
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Top row: category pill + status chip
+                              // Top row: category pill + status chip + menu
                               Row(
                                 children: [
                                   Container(
@@ -103,7 +106,9 @@ class MyListingsPage extends ConsumerWidget {
                                     ),
                                     decoration: BoxDecoration(
                                       color: AppColors.surfaceVariant,
-                                      borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusFull,
+                                      ),
                                     ),
                                     child: Text(
                                       '$catIcon $catLabel',
@@ -119,17 +124,158 @@ class MyListingsPage extends ConsumerWidget {
                                       vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: item.isAvailable 
+                                      color: item.isAvailable
                                           ? AppColors.success.withOpacity(0.12)
-                                          : AppColors.textTertiary.withOpacity(0.12),
-                                      borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                                          : AppColors.textTertiary.withOpacity(
+                                              0.12,
+                                            ),
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusFull,
+                                      ),
                                     ),
                                     child: Text(
                                       item.isAvailable ? '● Active' : 'Hidden',
                                       style: AppTypography.labelSmall.copyWith(
-                                        color: item.isAvailable ? AppColors.success : AppColors.textTertiary,
+                                        color: item.isAvailable
+                                            ? AppColors.success
+                                            : AppColors.textTertiary,
                                       ),
                                     ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.xs),
+                                  PopupMenuButton<String>(
+                                    icon: const Icon(
+                                      Icons.more_vert,
+                                      size: 20,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    onSelected: (value) async {
+                                      if (value == 'toggle_visibility') {
+                                        try {
+                                          final repo = ref.read(listingRepositoryProvider);
+                                          await repo.toggleListingVisibility(item.id, !item.isAvailable);
+                                          ref.invalidate(myListingsProvider);
+                                          ref.invalidate(nearbyListingsProvider);
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text(item.isAvailable ? 'Listing hidden' : 'Listing visible again'),
+                                              ),
+                                            );
+                                          }
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Failed to update: $e')),
+                                            );
+                                          }
+                                        }
+                                      } else if (value == 'delete') {
+                                        final confirm = await showDialog<bool>(
+                                          context: context,
+                                          builder: (ctx) => AlertDialog(
+                                            title: const Text('Delete Listing'),
+                                            content: Text(
+                                              'Are you sure you want to delete "${item.title}"? This action cannot be undone.',
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(ctx, false),
+                                                child: const Text('Cancel'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(ctx, true),
+                                                style: TextButton.styleFrom(
+                                                  foregroundColor:
+                                                      AppColors.error,
+                                                ),
+                                                child: const Text('Delete'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                        if (confirm == true) {
+                                          try {
+                                            final repo = ref.read(
+                                              listingRepositoryProvider,
+                                            );
+                                            await repo.deleteListing(item.id);
+                                            ref.invalidate(myListingsProvider);
+                                            ref.invalidate(
+                                              nearbyListingsProvider,
+                                            );
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                    'Listing deleted',
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          } catch (e) {
+                                            if (context.mounted) {
+                                              final errorMsg = e.toString();
+                                              if (errorMsg.contains('foreign key') || errorMsg.contains('referenced')) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                      'Cannot delete: this item has rental history. Use "Hide" instead.',
+                                                    ),
+                                                    duration: Duration(seconds: 4),
+                                                  ),
+                                                );
+                                              } else {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text('Failed to delete: $e')),
+                                                );
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    itemBuilder: (ctx) => [
+                                      PopupMenuItem(
+                                        value: 'toggle_visibility',
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              item.isAvailable ? Icons.visibility_off : Icons.visibility,
+                                              color: AppColors.textSecondary,
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: AppSpacing.sm),
+                                            Text(item.isAvailable ? 'Hide Listing' : 'Show Listing'),
+                                          ],
+                                        ),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.delete_outline,
+                                              color: AppColors.error,
+                                              size: 20,
+                                            ),
+                                            SizedBox(width: AppSpacing.sm),
+                                            Text(
+                                              'Delete',
+                                              style: TextStyle(
+                                                color: AppColors.error,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -137,10 +283,13 @@ class MyListingsPage extends ConsumerWidget {
 
                               // Item name
                               Text(
-                                item.title.isEmpty ? 'Unnamed Item' : item.title,
+                                item.title.isEmpty
+                                    ? 'Unnamed Item'
+                                    : item.title,
                                 style: AppTypography.h4,
                               ),
-                              if (item.description != null && item.description!.isNotEmpty) ...[
+                              if (item.description != null &&
+                                  item.description!.isNotEmpty) ...[
                                 const SizedBox(height: AppSpacing.xs),
                                 Text(
                                   item.description!,
@@ -162,11 +311,17 @@ class MyListingsPage extends ConsumerWidget {
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(Icons.currency_rupee, size: 14, color: AppColors.textSecondary),
+                                      const Icon(
+                                        Icons.currency_rupee,
+                                        size: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
                                       const SizedBox(width: 4),
                                       Text(
                                         '${item.pricePerDay.toStringAsFixed(0)}/day',
-                                        style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                                        style: AppTypography.caption.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -174,11 +329,17 @@ class MyListingsPage extends ConsumerWidget {
                                     Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const Icon(Icons.flash_on, size: 14, color: AppColors.warning),
+                                        const Icon(
+                                          Icons.flash_on,
+                                          size: 14,
+                                          color: AppColors.warning,
+                                        ),
                                         const SizedBox(width: 4),
                                         Text(
                                           'Instant',
-                                          style: AppTypography.caption.copyWith(color: AppColors.warning),
+                                          style: AppTypography.caption.copyWith(
+                                            color: AppColors.warning,
+                                          ),
                                         ),
                                       ],
                                     ),

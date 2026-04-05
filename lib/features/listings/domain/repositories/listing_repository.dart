@@ -23,4 +23,7 @@ abstract class ListingRepository {
 
   /// Deletes a listing.
   Future<void> deleteListing(String id);
+
+  /// Toggle listing visibility (hide/show).
+  Future<void> toggleListingVisibility(String id, bool isAvailable);
 }

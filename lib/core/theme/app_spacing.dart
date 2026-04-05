@@ -22,9 +22,9 @@ class AppSpacing {
 
   // Border radius
   static const double radiusSm = 8;
-  static const double radiusMd = 12;
-  static const double radiusLg = 16;
-  static const double radiusXl = 24;
+  static const double radiusMd = 16;
+  static const double radiusLg = 24;
+  static const double radiusXl = 32;
   static const double radiusFull = 999;
 
   // Icon sizes

@@ -28,7 +28,7 @@ class ProfilePage extends ConsumerWidget {
       body: user == null
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.screenPadding),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.screenPadding, AppSpacing.screenPadding, 120),
               child: Column(
                 children: [
                   // Avatar and name

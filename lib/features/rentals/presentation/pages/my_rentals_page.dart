@@ -63,7 +63,7 @@ class _MyRentalsPageState extends ConsumerState<MyRentalsPage> with SingleTicker
                 );
               }
               return ListView.builder(
-                padding: const EdgeInsets.all(AppSpacing.screenPadding),
+                padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.screenPadding, AppSpacing.screenPadding, 120),
                 itemCount: rentals.length,
                 itemBuilder: (context, index) {
                   return RentalCard(rental: rentals[index], isLender: false);
@@ -85,7 +85,7 @@ class _MyRentalsPageState extends ConsumerState<MyRentalsPage> with SingleTicker
                 );
               }
               return ListView.builder(
-                padding: const EdgeInsets.all(AppSpacing.screenPadding),
+                padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.screenPadding, AppSpacing.screenPadding, 120),
                 itemCount: rentals.length,
                 itemBuilder: (context, index) {
                   return RentalCard(rental: rentals[index], isLender: true);

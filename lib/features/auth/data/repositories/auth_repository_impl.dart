@@ -130,26 +130,24 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> signUpWithPassword(
       String name, String email, String password) async {
     try {
-      final response = await _supabase.auth.signUp(
-        email: email,
-        password: password,
-        data: {'full_name': name},
+      // Use Edge Function to create user (bypasses email confirmation)
+      final response = await _supabase.functions.invoke(
+        'signup',
+        body: {
+          'email': email,
+          'password': password,
+          'full_name': name,
+        },
       );
-      if (response.user == null) {
-        throw AuthException('Sign up failed. Please try again.');
+
+      if (response.status != 200) {
+        final error = response.data?['error'] ?? 'Sign up failed';
+        throw AuthException(_mapAuthErrorMessage(error.toString()));
       }
 
-      // Create profile row
-      await _supabase.from('users').upsert({
-        'id': response.user!.id,
-        'email': email,
-        'full_name': name,
-      });
-
-      // Sign out so the user goes through the login flow
-      await _supabase.auth.signOut();
-    } on supa.AuthException catch (e) {
-      throw AuthException(_mapAuthErrorMessage(e.message));
+      // Profile row is auto-created by database trigger
+    } on supa.FunctionException catch (e) {
+      throw AuthException(_mapAuthErrorMessage(e.toString()));
     } catch (e) {
       if (e is AuthException) rethrow;
       throw AuthException(_mapAuthErrorMessage('Sign up failed: $e'));

@@ -15,10 +15,7 @@ import '../providers/request_provider.dart';
 class RequestDetailPage extends ConsumerWidget {
   final String requestId;
 
-  const RequestDetailPage({
-    super.key,
-    required this.requestId,
-  });
+  const RequestDetailPage({super.key, required this.requestId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,9 +23,7 @@ class RequestDetailPage extends ConsumerWidget {
     final requestsAsync = ref.watch(nearbyRequestsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Request Details'),
-      ),
+      appBar: AppBar(title: const Text('Request Details')),
       body: requestsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => EmptyStateWidget(
@@ -40,7 +35,7 @@ class RequestDetailPage extends ConsumerWidget {
         ),
         data: (requests) {
           final requestList = requests.where((r) => r.id == requestId).toList();
-          
+
           if (requestList.isEmpty) {
             return EmptyStateWidget(
               icon: Icons.search_off,
@@ -50,7 +45,7 @@ class RequestDetailPage extends ConsumerWidget {
               onAction: () => context.pop(),
             );
           }
-          
+
           final request = requestList.first;
 
           return SingleChildScrollView(
@@ -63,10 +58,15 @@ class RequestDetailPage extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.surfaceVariant,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusFull,
+                        ),
                       ),
                       child: Text(
                         CategoryConstants.getLabel(request.category),
@@ -74,10 +74,15 @@ class RequestDetailPage extends ConsumerWidget {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.warning.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusFull,
+                        ),
                       ),
                       child: Text(
                         'Needed',
@@ -89,21 +94,20 @@ class RequestDetailPage extends ConsumerWidget {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: AppSpacing.lg),
 
                 // Title
-                Text(
-                  request.itemName,
-                  style: AppTypography.h2,
-                ),
-                
+                Text(request.itemName, style: AppTypography.h2),
+
                 const SizedBox(height: AppSpacing.md),
-                
+
                 // Description
                 Text(
                   request.description,
-                  style: AppTypography.bodyLarge.copyWith(color: AppColors.textSecondary),
+                  style: AppTypography.bodyLarge.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
 
                 const SizedBox(height: AppSpacing.xl),
@@ -123,7 +127,8 @@ class RequestDetailPage extends ConsumerWidget {
                 SizedBox(
                   width: double.infinity,
                   child: AppButton(
-                    onPressed: () => _showOfferItemBottomSheet(context, ref, request),
+                    onPressed: () =>
+                        _showOfferItemBottomSheet(context, ref, request),
                     label: 'I Have This Item',
                   ),
                 ),
@@ -135,12 +140,18 @@ class RequestDetailPage extends ConsumerWidget {
     );
   }
 
-  void _showOfferItemBottomSheet(BuildContext context, WidgetRef ref, dynamic request) {
+  void _showOfferItemBottomSheet(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic request,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusXl)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusXl),
+        ),
       ),
       builder: (context) {
         return DraggableScrollableSheet(
@@ -178,7 +189,9 @@ class _OfferItemSheet extends ConsumerWidget {
       padding: const EdgeInsets.all(AppSpacing.screenPadding),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusXl)),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusXl),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,19 +211,27 @@ class _OfferItemSheet extends ConsumerWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             'Choose from your active listings to fulfill this request. The requester will be notified of your offer.',
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
           Expanded(
             child: myListingsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('Error loading your items', style: TextStyle(color: AppColors.error))),
+              error: (err, stack) => Center(
+                child: Text(
+                  'Error loading your items',
+                  style: TextStyle(color: AppColors.error),
+                ),
+              ),
               data: (listings) {
                 if (listings.isEmpty) {
                   return EmptyStateWidget(
                     icon: Icons.inventory_2_outlined,
                     title: 'No listings available',
-                    subtitle: 'You need to create a listing before you can offer an item.',
+                    subtitle:
+                        'You need to create a listing before you can offer an item.',
                     actionLabel: 'Create Listing',
                     onAction: () {
                       context.pop();
@@ -222,18 +243,23 @@ class _OfferItemSheet extends ConsumerWidget {
                 return ListView.separated(
                   controller: scrollController,
                   itemCount: listings.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(height: AppSpacing.md),
                   itemBuilder: (context, index) {
                     final listing = listings[index];
                     return ListTile(
                       contentPadding: const EdgeInsets.all(AppSpacing.sm),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusLg,
+                        ),
                         side: const BorderSide(color: AppColors.border),
                       ),
                       leading: listing.imageUrls.isNotEmpty
                           ? ClipRRect(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusSm,
+                              ),
                               child: Image.network(
                                 listing.imageUrls.first,
                                 width: 50,
@@ -246,37 +272,49 @@ class _OfferItemSheet extends ConsumerWidget {
                               height: 50,
                               decoration: BoxDecoration(
                                 color: AppColors.surfaceVariant,
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusSm,
+                                ),
                               ),
-                              child: const Icon(Icons.image_not_supported, color: AppColors.textSecondary),
+                              child: const Icon(
+                                Icons.image_not_supported,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                       title: Text(listing.title, style: AppTypography.h4),
-                      subtitle: Text('₹${listing.pricePerDay.toStringAsFixed(0)}/day'),
+                      subtitle: Text(
+                        '₹${listing.pricePerDay.toStringAsFixed(0)}/day',
+                      ),
                       trailing: SizedBox(
-                        width: 90,
+                        width: 80,
                         height: 36,
                         child: AppButton(
                           label: 'Offer',
                           onPressed: () async {
                             try {
-                            final repo = ref.read(requestRepositoryProvider);
-                            await repo.offerListingToRequest(
-                              requestId: requestId,
-                              listingId: listing.id,
-                            );
+                              final repo = ref.read(requestRepositoryProvider);
+                              await repo.offerListingToRequest(
+                                requestId: requestId,
+                                listingId: listing.id,
+                              );
 
-                            if (context.mounted) {
-                              context.pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Item successfully offered!')),
-                              );
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
-                              );
-                            }
+                              if (context.mounted) {
+                                context.pop();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Item successfully offered!'),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(e.toString()),
+                                    backgroundColor: AppColors.error,
+                                  ),
+                                );
+                              }
                             }
                           },
                         ),
@@ -298,11 +336,7 @@ class _DetailsBox extends StatelessWidget {
   final int? durationDays;
   final DateTime? startDate;
 
-  const _DetailsBox({
-    this.budgetPerDay,
-    this.durationDays,
-    this.startDate,
-  });
+  const _DetailsBox({this.budgetPerDay, this.durationDays, this.startDate});
 
   @override
   Widget build(BuildContext context) {
@@ -319,7 +353,9 @@ class _DetailsBox extends StatelessWidget {
           _buildInfoItem(
             icon: Icons.currency_rupee,
             label: 'Budget',
-            value: budgetPerDay != null ? '₹${budgetPerDay!.toStringAsFixed(0)}/day' : 'Flexible',
+            value: budgetPerDay != null
+                ? '₹${budgetPerDay!.toStringAsFixed(0)}/day'
+                : 'Flexible',
             iconColor: AppColors.primary,
           ),
           _buildInfoItem(

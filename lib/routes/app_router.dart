@@ -32,36 +32,63 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _calculateSelectedIndex(context),
-        onDestinationSelected: (int index) => _onItemTapped(index, context),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
+      extendBody: true,
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(40),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
-            label: 'Rentals',
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _BuildNavItem(
+                icon: Icons.home_rounded,
+                label: 'Home',
+                index: 0,
+                selectedIndex: _calculateSelectedIndex(context),
+                onTap: (i) => _onItemTapped(i, context),
+              ),
+              _BuildNavItem(
+                icon: Icons.swap_horiz_rounded,
+                label: 'Rentals',
+                index: 1,
+                selectedIndex: _calculateSelectedIndex(context),
+                onTap: (i) => _onItemTapped(i, context),
+              ),
+              _BuildNavItem(
+                icon: Icons.add_box_outlined,
+                label: 'Request',
+                index: 2,
+                selectedIndex: _calculateSelectedIndex(context),
+                onTap: (i) => _onItemTapped(i, context),
+              ),
+              _BuildNavItem(
+                icon: Icons.notifications_none_rounded,
+                label: 'Alerts',
+                index: 3,
+                selectedIndex: _calculateSelectedIndex(context),
+                onTap: (i) => _onItemTapped(i, context),
+              ),
+              _BuildNavItem(
+                icon: Icons.person_outline_rounded,
+                label: 'Profile',
+                index: 4,
+                selectedIndex: _calculateSelectedIndex(context),
+                onTap: (i) => _onItemTapped(i, context),
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.add_circle_outline),
-            selectedIcon: Icon(Icons.add_circle),
-            label: 'Request',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.notifications_outlined),
-            selectedIcon: Icon(Icons.notifications),
-            label: 'Alerts',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -97,6 +124,58 @@ class AppShell extends StatelessWidget {
   }
 }
 
+class _BuildNavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final int index;
+  final int selectedIndex;
+  final Function(int) onTap;
+
+  const _BuildNavItem({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.index,
+    required this.selectedIndex,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isSelected = index == selectedIndex;
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final color = isSelected ? primaryColor : Colors.grey.shade500;
+
+    return GestureDetector(
+      onTap: () => onTap(index),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isSelected ? primaryColor.withOpacity(0.12) : Colors.transparent,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              fontFamily: 'Be Vietnam Pro',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// A ChangeNotifier that listens to Supabase auth state changes
 /// and notifies GoRouter to re-evaluate its redirect logic.
 class AuthStateNotifier extends ChangeNotifier {
@@ -112,11 +191,17 @@ final authStateNotifierProvider = Provider<AuthStateNotifier>((ref) {
   return AuthStateNotifier();
 });
 
+final GlobalKey<NavigatorState> _rootNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'root');
+final GlobalKey<NavigatorState> _shellNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'shell');
+
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(currentUserProvider);
   final authNotifier = ref.watch(authStateNotifierProvider);
 
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: '/home',
     refreshListenable: authNotifier,
     redirect: (context, state) async {
@@ -178,6 +263,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
       // Main app routes with bottom navigation
       ShellRoute(
+        navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) => AppShell(child: child),
         routes: [
           GoRoute(
@@ -186,6 +272,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: 'item/:id',
+                parentNavigatorKey: _rootNavigatorKey,
                 builder: (context, state) {
                   final id = state.pathParameters['id']!;
                   return ItemDetailPage(listingId: id);
@@ -193,6 +280,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'request',
+                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) {
                       final listingId = state.pathParameters['id']!;
                       return RentalRequestPage(listingId: listingId);
@@ -202,6 +290,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: 'request/:id',
+                parentNavigatorKey: _rootNavigatorKey,
                 builder: (context, state) {
                   final id = state.pathParameters['id']!;
                   return RequestDetailPage(requestId: id);
@@ -227,18 +316,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: 'edit',
+                parentNavigatorKey: _rootNavigatorKey,
                 builder: (context, state) => const EditProfilePage(),
               ),
               GoRoute(
                 path: 'settings',
+                parentNavigatorKey: _rootNavigatorKey,
                 builder: (context, state) => const SettingsPage(),
               ),
               GoRoute(
                 path: 'my-requests',
+                parentNavigatorKey: _rootNavigatorKey,
                 builder: (context, state) => const MyRequestsPage(),
               ),
               GoRoute(
                 path: 'my-listings',
+                parentNavigatorKey: _rootNavigatorKey,
                 builder: (context, state) => const MyListingsPage(),
               ),
             ],

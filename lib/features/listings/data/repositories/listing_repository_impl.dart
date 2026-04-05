@@ -20,19 +20,17 @@ class ListingRepositoryImpl implements ListingRepository {
       // Call the PostGIS spatial RPC
       var query = _supabase.rpc(
         'get_ranked_nearby_listings',
-        params: {
-          'lat': lat,
-          'lng': lng,
-          'radius_meters': radiusMeters,
-        },
+        params: {'lat': lat, 'lng': lng, 'radius_meters': radiusMeters.toInt()},
       );
 
       final response = await query;
 
       final List<dynamic> data = response as List<dynamic>;
-      
+
       var listings = data
-          .map((json) => ListingModel.fromRankedJson(json as Map<String, dynamic>))
+          .map(
+            (json) => ListingModel.fromRankedJson(json as Map<String, dynamic>),
+          )
           .toList();
 
       if (category != null && category.isNotEmpty) {
@@ -103,7 +101,7 @@ class ListingRepositoryImpl implements ListingRepository {
           .insert(model.toCreateJson(lat, lng))
           .select()
           .single();
-      
+
       return ListingModel.fromJson(response);
     } catch (e) {
       throw ServerException('Failed to create listing: $e');
@@ -120,7 +118,7 @@ class ListingRepositoryImpl implements ListingRepository {
           .eq('id', listing.id)
           .select()
           .single();
-      
+
       return ListingModel.fromJson(response);
     } catch (e) {
       throw ServerException('Failed to update listing: $e');
@@ -133,6 +131,18 @@ class ListingRepositoryImpl implements ListingRepository {
       await _supabase.from('listings').delete().eq('id', id);
     } catch (e) {
       throw ServerException('Failed to delete listing: $e');
+    }
+  }
+
+  @override
+  Future<void> toggleListingVisibility(String id, bool isAvailable) async {
+    try {
+      await _supabase
+          .from('listings')
+          .update({'is_available': isAvailable})
+          .eq('id', id);
+    } catch (e) {
+      throw ServerException('Failed to update listing visibility: $e');
     }
   }
 }

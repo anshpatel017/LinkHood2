@@ -23,18 +23,19 @@ final nearbyListingsProvider = FutureProvider<List<Listing>>((ref) async {
   final repo = ref.watch(listingRepositoryProvider);
   final category = ref.watch(selectedCategoryProvider);
   final radius = ref.watch(searchRadiusProvider);
-  
 
   double? lat;
   double? lng;
 
   try {
     // Prefer recent GPS location
-    final position = await LocationService.getLastKnownPosition() ?? await LocationService.getCurrentPosition();
+    final position =
+        await LocationService.getLastKnownPosition() ??
+        await LocationService.getCurrentPosition();
     lat = position.latitude;
     lng = position.longitude;
   } catch (e) {
-    // If location is denied or unavailable on web emulator, fallback to the test location 
+    // If location is denied or unavailable on web emulator, fallback to the test location
     // so the items created by the user consistently show up.
     // Nadiad coordinates based on the generated DB listings
     lat = 22.695;
@@ -58,7 +59,22 @@ final myListingsProvider = FutureProvider<List<Listing>>((ref) async {
 });
 
 // Provides a specific listing by ID
-final listingDetailProvider = FutureProvider.family<Listing, String>((ref, id) async {
+final listingDetailProvider = FutureProvider.family<Listing, String>((
+  ref,
+  id,
+) async {
   final repo = ref.watch(listingRepositoryProvider);
   return repo.getListingById(id);
+});
+
+// Delete listing notifier
+final deleteListingProvider = FutureProvider.family<void, String>((
+  ref,
+  id,
+) async {
+  final repo = ref.watch(listingRepositoryProvider);
+  await repo.deleteListing(id);
+  // Invalidate my listings to refresh the list
+  ref.invalidate(myListingsProvider);
+  ref.invalidate(nearbyListingsProvider);
 });

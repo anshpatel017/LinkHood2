@@ -53,10 +53,13 @@ class RentalRepositoryImpl implements RentalRepository {
   }
 
   @override
-  Future<List<Rental>> fetchUserRentals(String userId, {required bool asBorrower}) async {
+  Future<List<Rental>> fetchUserRentals(
+    String userId, {
+    required bool asBorrower,
+  }) async {
     try {
       final roleColumn = asBorrower ? 'borrower_id' : 'lender_id';
-      
+
       final response = await _supabase
           .from('rentals')
           .select('''
@@ -70,7 +73,12 @@ class RentalRepositoryImpl implements RentalRepository {
 
       final List<dynamic> data = response as List<dynamic>;
       return data
-          .map((json) => RentalModel.fromJson(json as Map<String, dynamic>, currentUserId: userId))
+          .map(
+            (json) => RentalModel.fromJson(
+              json as Map<String, dynamic>,
+              currentUserId: userId,
+            ),
+          )
           .toList();
     } catch (e) {
       throw ServerException('Failed to fetch rentals: $e');
@@ -83,7 +91,10 @@ class RentalRepositoryImpl implements RentalRepository {
       final currentUserId = _supabase.auth.currentUser?.id;
       final response = await _supabase
           .from('rentals')
-          .update({'status': newStatus, 'updated_at': DateTime.now().toIso8601String()})
+          .update({
+            'status': newStatus,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
           .eq('id', rentalId)
           .select('''
             *,
@@ -93,7 +104,26 @@ class RentalRepositoryImpl implements RentalRepository {
           ''')
           .single();
 
-      return RentalModel.fromJson(response, currentUserId: currentUserId);
+      final rental = RentalModel.fromJson(
+        response,
+        currentUserId: currentUserId,
+      );
+
+      // Update listing availability based on rental status
+      // Hide listing when rental is active, show again when completed/cancelled
+      if (newStatus == 'active' || newStatus == 'accepted') {
+        await _supabase
+            .from('listings')
+            .update({'is_available': false})
+            .eq('id', rental.listingId);
+      } else if (newStatus == 'completed' || newStatus == 'cancelled') {
+        await _supabase
+            .from('listings')
+            .update({'is_available': true})
+            .eq('id', rental.listingId);
+      }
+
+      return rental;
     } catch (e) {
       throw ServerException('Failed to update rental status: $e');
     }

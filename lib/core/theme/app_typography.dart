@@ -1,79 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// RentNear typography system
 class AppTypography {
   AppTypography._();
 
-  static const String _fontFamily = 'Roboto';
-
   // Headings
-  static const TextStyle h1 = TextStyle(
-    fontFamily: _fontFamily,
+  static final TextStyle h1 = GoogleFonts.plusJakartaSans(
     fontSize: 28,
     fontWeight: FontWeight.w700,
     height: 1.3,
   );
 
-  static const TextStyle h2 = TextStyle(
-    fontFamily: _fontFamily,
+  static final TextStyle h2 = GoogleFonts.plusJakartaSans(
     fontSize: 24,
     fontWeight: FontWeight.w700,
     height: 1.3,
   );
 
-  static const TextStyle h3 = TextStyle(
-    fontFamily: _fontFamily,
+  static final TextStyle h3 = GoogleFonts.plusJakartaSans(
     fontSize: 20,
     fontWeight: FontWeight.w600,
     height: 1.4,
   );
 
-  static const TextStyle h4 = TextStyle(
-    fontFamily: _fontFamily,
+  static final TextStyle h4 = GoogleFonts.plusJakartaSans(
     fontSize: 18,
     fontWeight: FontWeight.w600,
     height: 1.4,
   );
 
   // Body
-  static const TextStyle bodyLarge = TextStyle(
-    fontFamily: _fontFamily,
+  static final TextStyle bodyLarge = GoogleFonts.beVietnamPro(
     fontSize: 16,
     fontWeight: FontWeight.w400,
     height: 1.5,
   );
 
-  static const TextStyle bodyMedium = TextStyle(
-    fontFamily: _fontFamily,
+  static final TextStyle bodyMedium = GoogleFonts.beVietnamPro(
     fontSize: 14,
     fontWeight: FontWeight.w400,
     height: 1.5,
   );
 
-  static const TextStyle bodySmall = TextStyle(
-    fontFamily: _fontFamily,
+  static final TextStyle bodySmall = GoogleFonts.beVietnamPro(
     fontSize: 12,
     fontWeight: FontWeight.w400,
     height: 1.5,
   );
 
   // Labels
-  static const TextStyle labelLarge = TextStyle(
-    fontFamily: _fontFamily,
+  static final TextStyle labelLarge = GoogleFonts.plusJakartaSans(
     fontSize: 14,
     fontWeight: FontWeight.w600,
     height: 1.4,
   );
 
-  static const TextStyle labelMedium = TextStyle(
-    fontFamily: _fontFamily,
+  static final TextStyle labelMedium = GoogleFonts.plusJakartaSans(
     fontSize: 12,
     fontWeight: FontWeight.w600,
     height: 1.4,
   );
 
-  static const TextStyle labelSmall = TextStyle(
-    fontFamily: _fontFamily,
+  static final TextStyle labelSmall = GoogleFonts.plusJakartaSans(
     fontSize: 10,
     fontWeight: FontWeight.w600,
     height: 1.4,
@@ -81,16 +70,14 @@ class AppTypography {
   );
 
   // Button
-  static const TextStyle button = TextStyle(
-    fontFamily: _fontFamily,
+  static final TextStyle button = GoogleFonts.plusJakartaSans(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     height: 1.4,
   );
 
   // Caption / Overline
-  static const TextStyle caption = TextStyle(
-    fontFamily: _fontFamily,
+  static final TextStyle caption = GoogleFonts.beVietnamPro(
     fontSize: 12,
     fontWeight: FontWeight.w400,
     height: 1.4,
@@ -98,15 +85,13 @@ class AppTypography {
   );
 
   // Price display
-  static const TextStyle price = TextStyle(
-    fontFamily: _fontFamily,
+  static final TextStyle price = GoogleFonts.plusJakartaSans(
     fontSize: 18,
     fontWeight: FontWeight.w700,
     height: 1.3,
   );
 
-  static const TextStyle priceSmall = TextStyle(
-    fontFamily: _fontFamily,
+  static final TextStyle priceSmall = GoogleFonts.plusJakartaSans(
     fontSize: 14,
     fontWeight: FontWeight.w700,
     height: 1.3,

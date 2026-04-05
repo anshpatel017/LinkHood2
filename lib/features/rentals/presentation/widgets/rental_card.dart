@@ -12,11 +12,7 @@ class RentalCard extends ConsumerWidget {
   final Rental rental;
   final bool isLender;
 
-  const RentalCard({
-    super.key,
-    required this.rental,
-    required this.isLender,
-  });
+  const RentalCard({super.key, required this.rental, required this.isLender});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,7 +23,9 @@ class RentalCard extends ConsumerWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
       elevation: 0,
       color: AppColors.surfaceVariant,
       child: Padding(
@@ -40,14 +38,20 @@ class RentalCard extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   ),
                   child: Text(
                     statusText,
-                    style: AppTypography.labelSmall.copyWith(color: statusColor, fontWeight: FontWeight.bold),
+                    style: AppTypography.labelSmall.copyWith(
+                      color: statusColor,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 Text(
@@ -57,7 +61,7 @@ class RentalCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            
+
             // Listing Details
             Row(
               children: [
@@ -67,14 +71,18 @@ class RentalCard extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: AppColors.border,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                    image: (rental.listingImages != null && rental.listingImages!.isNotEmpty)
+                    image:
+                        (rental.listingImages != null &&
+                            rental.listingImages!.isNotEmpty)
                         ? DecorationImage(
                             image: NetworkImage(rental.listingImages!.first),
                             fit: BoxFit.cover,
                           )
                         : null,
                   ),
-                  child: (rental.listingImages == null || rental.listingImages!.isEmpty)
+                  child:
+                      (rental.listingImages == null ||
+                          rental.listingImages!.isEmpty)
                       ? const Icon(Icons.image, color: AppColors.textTertiary)
                       : null,
                 ),
@@ -83,11 +91,20 @@ class RentalCard extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(rental.listingTitle ?? 'Unknown Item', style: AppTypography.labelLarge, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      Text(
+                        rental.listingTitle ?? 'Unknown Item',
+                        style: AppTypography.labelLarge,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
-                        isLender ? 'Requested by $counterName' : 'Lent by $counterName',
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                        isLender
+                            ? 'Requested by $counterName'
+                            : 'Lent by $counterName',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -95,8 +112,16 @@ class RentalCard extends ConsumerWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(CurrencyFormatter.format(rental.totalCost), style: AppTypography.labelLarge.copyWith(color: AppColors.primary)),
-                    Text('${rental.totalDays} days', style: AppTypography.caption),
+                    Text(
+                      CurrencyFormatter.format(rental.totalCost),
+                      style: AppTypography.labelLarge.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    Text(
+                      '${rental.totalDays} days',
+                      style: AppTypography.caption,
+                    ),
                   ],
                 ),
               ],
@@ -112,64 +137,125 @@ class RentalCard extends ConsumerWidget {
                 children: [
                   TextButton(
                     onPressed: () => _updateStatus(ref, 'rejected'),
-                    child: const Text('Reject', style: TextStyle(color: AppColors.error)),
+                    child: const Text(
+                      'Reject',
+                      style: TextStyle(color: AppColors.error),
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   ElevatedButton(
                     onPressed: () => _updateStatus(ref, 'accepted'),
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.success, foregroundColor: Colors.white),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.success,
+                      foregroundColor: Colors.white,
+                    ),
                     child: const Text('Accept'),
                   ),
                 ],
               ),
             ],
-            
+
+            // Cancel button for borrowers with pending requests
+            if (!isLender && rental.isPending) ...[
+              const SizedBox(height: AppSpacing.md),
+              const Divider(color: AppColors.border),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => _updateStatus(ref, 'cancelled'),
+                    child: const Text(
+                      'Cancel Request',
+                      style: TextStyle(color: AppColors.error),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
             // Start/Complete Actions for accepted items
             if (rental.isAccepted) ...[
-               const SizedBox(height: AppSpacing.md),
-               const Divider(color: AppColors.border),
-               const SizedBox(height: AppSpacing.sm),
-               Row(
-                 mainAxisAlignment: MainAxisAlignment.end,
-                 children: [
-                   ElevatedButton(
-                     onPressed: () => _updateStatus(ref, isLender ? 'completed' : 'active'), // Simplification: Lender completes, Borrower marks active
-                     child: Text(isLender ? 'Mark Completed' : 'Mark Picked Up'),
-                   ),
-                 ],
-               ),
+              const SizedBox(height: AppSpacing.md),
+              const Divider(color: AppColors.border),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton(
+                    onPressed: () => _updateStatus(
+                      ref,
+                      isLender ? 'completed' : 'active',
+                    ), // Simplification: Lender completes, Borrower marks active
+                    child: Text(isLender ? 'Mark Completed' : 'Mark Picked Up'),
+                  ),
+                ],
+              ),
+            ],
+
+            // Return button for active rentals (borrower returns item)
+            if (rental.isActive) ...[
+              const SizedBox(height: AppSpacing.md),
+              const Divider(color: AppColors.border),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (!isLender)
+                    Text(
+                      'Return item to lender',
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  const SizedBox(width: AppSpacing.sm),
+                  ElevatedButton(
+                    onPressed: () => _updateStatus(ref, 'completed'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.success,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text(
+                      isLender ? 'Mark Returned' : 'Confirm Returned',
+                    ),
+                  ),
+                ],
+              ),
             ],
 
             // Rated Actions for completed items
             if (rental.isCompleted) ...[
-              ref.watch(hasRatedProvider(rental.id)).when(
-                data: (hasRated) {
-                  if (hasRated) return const SizedBox.shrink();
-                  return Column(
-                    children: [
-                      const SizedBox(height: AppSpacing.md),
-                      const Divider(color: AppColors.border),
-                      const SizedBox(height: AppSpacing.sm),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+              ref
+                  .watch(hasRatedProvider(rental.id))
+                  .when(
+                    data: (hasRated) {
+                      if (hasRated) return const SizedBox.shrink();
+                      return Column(
                         children: [
-                          ElevatedButton.icon(
-                            onPressed: () => _showRatingDialog(context, ref),
-                            icon: const Icon(Icons.star_outline),
-                            label: const Text('Rate Experience'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.amber.shade700,
-                              foregroundColor: Colors.white,
-                            ),
+                          const SizedBox(height: AppSpacing.md),
+                          const Divider(color: AppColors.border),
+                          const SizedBox(height: AppSpacing.sm),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: () =>
+                                    _showRatingDialog(context, ref),
+                                icon: const Icon(Icons.star_outline),
+                                label: const Text('Rate Experience'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber.shade700,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
-                      ),
-                    ],
-                  );
-                },
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-              ),
+                      );
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
             ],
           ],
         ),
@@ -222,17 +308,25 @@ class RentalCard extends ConsumerWidget {
               ElevatedButton(
                 onPressed: () async {
                   try {
-                    final rateeId = isLender ? rental.borrowerId : rental.lenderId;
-                    await ref.read(ratingControllerProvider).submitRating(
-                      rentalId: rental.id,
-                      rateeId: rateeId,
-                      score: score,
-                      comment: commentController.text.trim().isNotEmpty ? commentController.text.trim() : null,
-                    );
+                    final rateeId = isLender
+                        ? rental.borrowerId
+                        : rental.lenderId;
+                    await ref
+                        .read(ratingControllerProvider)
+                        .submitRating(
+                          rentalId: rental.id,
+                          rateeId: rateeId,
+                          score: score,
+                          comment: commentController.text.trim().isNotEmpty
+                              ? commentController.text.trim()
+                              : null,
+                        );
                     if (ctx.mounted) Navigator.pop(ctx);
                   } catch (e) {
                     if (ctx.mounted) {
-                      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Error: $e')));
+                      ScaffoldMessenger.of(
+                        ctx,
+                      ).showSnackBar(SnackBar(content: Text('Error: $e')));
                     }
                   }
                 },
@@ -251,13 +345,19 @@ class RentalCard extends ConsumerWidget {
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'pending': return Colors.orange;
-      case 'accepted': return AppColors.success;
-      case 'active': return Colors.blue;
-      case 'completed': return Colors.purple;
+      case 'pending':
+        return Colors.orange;
+      case 'accepted':
+        return AppColors.success;
+      case 'active':
+        return Colors.blue;
+      case 'completed':
+        return Colors.purple;
       case 'rejected':
-      case 'cancelled': return AppColors.error;
-      default: return AppColors.textSecondary;
+      case 'cancelled':
+        return AppColors.error;
+      default:
+        return AppColors.textSecondary;
     }
   }
 }
