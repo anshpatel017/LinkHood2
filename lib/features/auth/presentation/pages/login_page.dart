@@ -44,7 +44,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
             Container(
               padding: const EdgeInsets.all(AppSpacing.xxl),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -130,7 +130,6 @@ class _SignInTabState extends ConsumerState<_SignInTab> {
   final _passCtrl = TextEditingController();
   bool _obscure = true;
   bool _isLoading = false;
-  bool _isGoogleLoading = false;
 
   @override
   void dispose() {
@@ -158,26 +157,6 @@ class _SignInTabState extends ConsumerState<_SignInTab> {
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _signInWithGoogle() async {
-    setState(() => _isGoogleLoading = true);
-    try {
-      final needsOnboarding = await ref
-          .read(authControllerProvider)
-          .signInWithGoogle();
-      if (mounted) {
-        context.go(needsOnboarding ? '/onboarding' : '/home');
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
-      }
-    } finally {
-      if (mounted) setState(() => _isGoogleLoading = false);
     }
   }
 
@@ -241,10 +220,6 @@ class _SignInTabState extends ConsumerState<_SignInTab> {
               isLoading: _isLoading,
               icon: Icons.login,
             ),
-            const SizedBox(height: AppSpacing.lg),
-            _orDivider(),
-            const SizedBox(height: AppSpacing.lg),
-            _googleButton(),
             const SizedBox(height: AppSpacing.xl),
             Center(
               child: TextButton(
@@ -273,56 +248,6 @@ class _SignInTabState extends ConsumerState<_SignInTab> {
       ),
     );
   }
-
-  Widget _orDivider() => Row(
-    children: [
-      const Expanded(child: Divider()),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-        child: Text(
-          'OR',
-          style: AppTypography.caption.copyWith(color: AppColors.textTertiary),
-        ),
-      ),
-      const Expanded(child: Divider()),
-    ],
-  );
-
-  Widget _googleButton() => OutlinedButton(
-    onPressed: _isGoogleLoading ? null : _signInWithGoogle,
-    style: OutlinedButton.styleFrom(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-      side: const BorderSide(color: AppColors.border),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      ),
-    ),
-    child: _isGoogleLoading
-        ? const SizedBox(
-            height: 22,
-            width: 22,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          )
-        : Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.network(
-                'https://www.google.com/favicon.ico',
-                height: 22,
-                width: 22,
-                errorBuilder: (_, __, ___) =>
-                    const Icon(Icons.g_mobiledata, size: 22),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'Continue with Google',
-                style: AppTypography.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-  );
 }
 
 // ─── Sign Up Tab ───────────────────────────────────────────────────────────────
@@ -337,30 +262,60 @@ class _SignUpTab extends ConsumerStatefulWidget {
 
 class _SignUpTabState extends ConsumerState<_SignUpTab> {
   final _formKey = GlobalKey<FormState>();
+  final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  bool _obscure = true;
   bool _isLoading = false;
 
   @override
   void dispose() {
+    _nameCtrl.dispose();
     _emailCtrl.dispose();
+    _passCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _sendOtp() async {
+  Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
-      await ref
-          .read(authControllerProvider)
-          .signInWithOtp(_emailCtrl.text.trim());
+      await ref.read(authControllerProvider).signUpWithPassword(
+            _nameCtrl.text.trim(),
+            _emailCtrl.text.trim(),
+            _passCtrl.text,
+          );
 
       if (!mounted) return;
-      context.go('/otp', extra: _emailCtrl.text.trim());
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text('Account created successfully! Please sign in.'),
+              ),
+            ],
+          ),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+
+      // Switch to Sign In tab
+      widget.onNeedSignIn();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(_friendlyError(e.toString()))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_friendlyError(e.toString()))),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -376,8 +331,8 @@ class _SignUpTabState extends ConsumerState<_SignUpTab> {
     if (msg.contains('rate_limit') || msg.contains('429')) {
       return 'Too many attempts. Please wait a moment.';
     }
-    if (msg.contains('sending') || msg.contains('unexpected_failure')) {
-      return 'Failed to send verification code. Please try again.';
+    if (msg.contains('weak_password') || msg.contains('too short')) {
+      return 'Password is too weak. Use at least 6 characters.';
     }
     return msg;
   }
@@ -394,25 +349,46 @@ class _SignUpTabState extends ConsumerState<_SignUpTab> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: AppSpacing.md),
+
+            // ── Info banner ──────────────────────────────────────
             Container(
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.05),
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primary.withValues(alpha: 0.08),
+                    AppColors.accent.withValues(alpha: 0.06),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.verified_user_outlined,
-                    color: AppColors.primary,
-                    size: 24,
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.radiusSm),
+                    ),
+                    child: const Icon(
+                      Icons.person_add_alt_1_rounded,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Text(
-                      'We\'ll send a 6-digit code to verify your email, then you\'ll set your password.',
+                      'Create your account to start renting from neighbors!',
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary,
+                        height: 1.4,
                       ),
                     ),
                   ),
@@ -420,6 +396,20 @@ class _SignUpTabState extends ConsumerState<_SignUpTab> {
               ),
             ),
             const SizedBox(height: AppSpacing.xxl),
+
+            // ── Full Name ────────────────────────────────────────
+            AppTextField(
+              label: 'Full Name',
+              hint: 'Enter your full name',
+              controller: _nameCtrl,
+              validator: Validators.name,
+              keyboardType: TextInputType.name,
+              prefixIcon: const Icon(Icons.person_outlined),
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // ── Email ────────────────────────────────────────────
             AppTextField(
               label: 'Email Address',
               hint: 'you@example.com',
@@ -427,16 +417,46 @@ class _SignUpTabState extends ConsumerState<_SignUpTab> {
               validator: Validators.email,
               keyboardType: TextInputType.emailAddress,
               prefixIcon: const Icon(Icons.email_outlined),
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // ── Password ─────────────────────────────────────────
+            AppTextField(
+              label: 'Password',
+              hint: 'Min 6 characters',
+              controller: _passCtrl,
+              obscureText: _obscure,
+              validator: (v) {
+                if (v == null || v.isEmpty) return 'Password is required';
+                if (v.length < 6) {
+                  return 'Password must be at least 6 characters';
+                }
+                return null;
+              },
+              prefixIcon: const Icon(Icons.lock_outlined),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscure
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
+                onPressed: () => setState(() => _obscure = !_obscure),
+              ),
               textInputAction: TextInputAction.done,
             ),
             const SizedBox(height: AppSpacing.xxl),
+
+            // ── Sign Up Button ───────────────────────────────────
             AppButton(
-              label: 'Send Verification Code',
-              onPressed: _sendOtp,
+              label: 'Create Account',
+              onPressed: _signUp,
               isLoading: _isLoading,
-              icon: Icons.send_outlined,
+              icon: Icons.person_add_alt_1_rounded,
             ),
             const SizedBox(height: AppSpacing.xl),
+
+            // ── Switch to Sign In ────────────────────────────────
             Center(
               child: TextButton(
                 onPressed: widget.onNeedSignIn,

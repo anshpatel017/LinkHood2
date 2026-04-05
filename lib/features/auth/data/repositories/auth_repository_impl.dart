@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 import '../../../../core/errors/exceptions.dart';
 import '../../domain/entities/user.dart';
@@ -10,6 +9,35 @@ class AuthRepositoryImpl implements AuthRepository {
   final supa.SupabaseClient _supabase;
 
   AuthRepositoryImpl(this._supabase);
+
+  String _mapAuthErrorMessage(String message) {
+    final normalized = message.toLowerCase();
+
+    if (normalized.contains('invalid login credentials') ||
+        normalized.contains('invalid_credentials')) {
+      return 'Incorrect email or password.';
+    }
+    if (normalized.contains('email not confirmed')) {
+      return 'Please verify your email first.';
+    }
+    if (normalized.contains('rate limit') || normalized.contains('429')) {
+      return 'Too many attempts. Please wait a moment and try again.';
+    }
+    if (normalized.contains('failed to send email') ||
+        normalized.contains('email provider') ||
+        normalized.contains('smtp') ||
+        normalized.contains('unexpected_failure')) {
+      return 'Verification service is temporarily unavailable. Please try again shortly.';
+    }
+    if (normalized.contains('500') || normalized.contains('internal')) {
+      return 'Server is temporarily unavailable. Please try again shortly.';
+    }
+    if (normalized.contains('400') || normalized.contains('bad request')) {
+      return 'Request could not be processed. Please check your input and try again.';
+    }
+
+    return message;
+  }
 
   @override
   Stream<User?> get currentUserStream {
@@ -55,10 +83,12 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _supabase.auth.signInWithOtp(email: email, shouldCreateUser: true);
     } on supa.AuthException catch (e) {
-      throw AuthException(e.message);
+      throw AuthException(_mapAuthErrorMessage(e.message));
     } catch (e) {
       if (e is AuthException) rethrow;
-      throw AuthException('Failed to send OTP: $e');
+      throw AuthException(
+        _mapAuthErrorMessage('Failed to send verification code: $e'),
+      );
     }
   }
 
@@ -75,10 +105,10 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       return !(await isProfileComplete());
     } on supa.AuthException catch (e) {
-      throw AuthException(e.message);
+      throw AuthException(_mapAuthErrorMessage(e.message));
     } catch (e) {
       if (e is AuthException) rethrow;
-      throw AuthException('OTP verification failed: $e');
+      throw AuthException(_mapAuthErrorMessage('OTP verification failed: $e'));
     }
   }
 
@@ -97,6 +127,36 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> signUpWithPassword(
+      String name, String email, String password) async {
+    try {
+      final response = await _supabase.auth.signUp(
+        email: email,
+        password: password,
+        data: {'full_name': name},
+      );
+      if (response.user == null) {
+        throw AuthException('Sign up failed. Please try again.');
+      }
+
+      // Create profile row
+      await _supabase.from('users').upsert({
+        'id': response.user!.id,
+        'email': email,
+        'full_name': name,
+      });
+
+      // Sign out so the user goes through the login flow
+      await _supabase.auth.signOut();
+    } on supa.AuthException catch (e) {
+      throw AuthException(_mapAuthErrorMessage(e.message));
+    } catch (e) {
+      if (e is AuthException) rethrow;
+      throw AuthException(_mapAuthErrorMessage('Sign up failed: $e'));
+    }
+  }
+
+  @override
   Future<bool> signInWithPassword(String email, String password) async {
     try {
       final response = await _supabase.auth.signInWithPassword(
@@ -108,29 +168,18 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       return !(await isProfileComplete());
     } on supa.AuthException catch (e) {
-      throw AuthException(e.message);
+      throw AuthException(_mapAuthErrorMessage(e.message));
     } catch (e) {
       if (e is AuthException) rethrow;
-      throw AuthException('Login failed: $e');
+      throw AuthException(_mapAuthErrorMessage('Login failed: $e'));
     }
   }
 
   @override
   Future<bool> signInWithGoogle() async {
-    try {
-      if (kIsWeb) {
-        await _supabase.auth.signInWithOAuth(supa.OAuthProvider.google);
-      } else {
-        await _supabase.auth.signInWithOAuth(
-          supa.OAuthProvider.google,
-          redirectTo: 'io.supabase.rentnear://login-callback',
-        );
-      }
-      return false;
-    } catch (e) {
-      if (e is AuthException) rethrow;
-      throw AuthException('Failed to sign in with Google: $e');
-    }
+    throw AuthException(
+      'Google sign-in is temporarily disabled. Use email and verification code.',
+    );
   }
 
   @override

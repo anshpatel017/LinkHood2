@@ -39,6 +39,9 @@ class AuthController {
 
   Future<void> signInWithOtp(String email) => _repo.signInWithOtp(email);
 
+  Future<void> signUpWithPassword(String name, String email, String password) =>
+      _repo.signUpWithPassword(name, email, password);
+
   Future<bool> verifyOtp(String email, String token) =>
       _repo.verifyOtp(email, token);
 

@@ -19,6 +19,10 @@ abstract class AuthRepository {
   /// Sets the user's password after OTP verification.
   Future<void> setPassword(String password);
 
+  /// Signs up a new user with name, email, and password.
+  /// Creates the auth account and profile row.
+  Future<void> signUpWithPassword(String name, String email, String password);
+
   /// Signs in with email + password. Returns [true] if onboarding is needed.
   Future<bool> signInWithPassword(String email, String password);
 
