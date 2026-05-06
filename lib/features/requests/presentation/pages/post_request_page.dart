@@ -217,7 +217,14 @@ class _PostRequestPageState extends ConsumerState<PostRequestPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Post a Request')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.screenPadding),
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.screenPadding,
+          AppSpacing.screenPadding,
+          AppSpacing.screenPadding,
+          AppSpacing.screenPadding +
+              100 +
+              MediaQuery.of(context).padding.bottom,
+        ),
         child: Form(
           key: _formKey,
           child: Column(
